@@ -1,6 +1,8 @@
 # 🔧 Troubleshooting
 
-Real gotchas from building and running this. Everything below is something I hit, not something I anticipated.
+Everything below is something I actually hit while building this. I did not anticipate any of it and I did not pad the list to look thorough.
+
+I have grouped them into cloud, network lab, and general. The ones I would most want you to read are the silent failures, where nothing errors and the wrong outcome looks like the right one.
 
 ---
 
@@ -20,11 +22,14 @@ In Cloud Shell you are already authenticated, so `Get-AzContext` should print a 
 
 ### 🐚 Bash vs PowerShell in Cloud Shell
 
-Cloud Shell offers both. The scripts here are `.ps1`, so **Bash cannot run them at all**. Nothing useful is printed either, which makes this hard to diagnose if you do not already suspect it.
+Cloud Shell offers both. My scripts are `.ps1`, so **Bash cannot run them at all**. It prints nothing useful either, which made this hard for me to diagnose because I did not suspect the shell.
 
-Use the dropdown at the top left of the Cloud Shell window to switch to **PowerShell**. The prompt reads `PS /home/<you>>` when you are in the right one. A Bash prompt looks like `<you>@Azure:~$`.
+Use the dropdown at the top left of the Cloud Shell window to switch to **PowerShell**.
 
-Switching back and forth between the two while working through a run is how you end up with nothing happening and no error to search for.
+- ✅ Right shell: prompt reads `PS /home/<you>>`
+- ❌ Wrong shell: prompt reads `<you>@Azure:~$`
+
+I lost a run to switching back and forth between the two mid-session. Pick one and stay in it.
 
 ### 📁 Forward slashes in Cloud Shell
 
@@ -34,7 +39,7 @@ The README shows the Windows form because that is where the scripts were written
 
 ### 🪤 Backslashes in script paths (fixed, worth knowing)
 
-The scripts originally built paths like this:
+My scripts originally built paths like this:
 
 ```powershell
 Join-Path $PSScriptRoot '..\reports'
@@ -42,17 +47,24 @@ Join-Path $PSScriptRoot '..\reports'
 
 That works on Windows. On Linux a backslash is a **legal filename character**, not a separator, so the same line resolved to a directory literally named `..\reports` inside `scripts/`.
 
-Nothing errored. The directory was created, the CSV was written into it, and the script printed a success message with a plausible-looking path. The reports were simply not where the repo said, and `accuracy-log.csv` never accumulated.
+Here is what made it nasty:
 
-Fixed everywhere with:
+- Nothing errored
+- The directory was created
+- The CSV was written into it
+- The script printed a success message with a plausible-looking path
+
+So the reports were simply not where my repo said they were, and `accuracy-log.csv` never accumulated across runs.
+
+I fixed it everywhere with:
 
 ```powershell
 Join-Path (Split-Path $PSScriptRoot -Parent) 'reports'
 ```
 
-The multi-argument form of `Join-Path` also works but needs PowerShell 6 or later, and these should keep running in Windows PowerShell 5.1 on a plain desktop.
+I avoided the multi-argument form of `Join-Path`. It reads better, but it needs PowerShell 6 or later, and I want these running in Windows PowerShell 5.1 on a plain desktop.
 
-A script that fails loudly is fine. A script that lies quietly is the one to worry about.
+A script that fails loudly is fine. A script that lies quietly is the one I worry about.
 
 ### Region not available
 
@@ -123,9 +135,9 @@ Spanning tree blocks the affected VLAN rather than carry traffic when the ends c
 
 ### 🔁 A PVID block that will not clear
 
-After both ends agreed, one trunk still showed VLAN 99 missing from the forwarding list. Packet Tracer's spanning tree is simplified and the block can stick.
+After both my ends agreed, one trunk still showed VLAN 99 missing from the forwarding list. Packet Tracer's spanning tree is simplified and the block can stick.
 
-Bounce the port to force a re-evaluation:
+I bounced the port to force a re-evaluation:
 
 ```
 interface FastEthernet0/1
@@ -133,9 +145,11 @@ interface FastEthernet0/1
  no shutdown
 ```
 
-Wait 30 to 50 seconds and re-check.
+Wait 30 to 50 seconds, then re-check. That cleared it for me.
 
-If it persists, **check which VLAN is actually affected before chasing it.** In this design only VLAN 99 was blocked, and 99 is the native parking VLAN carrying no user traffic, so connectivity was unaffected either way. Knowing which alarms to act on and which to note and move past is most of what troubleshooting is.
+If it persists, **check which VLAN is actually affected before chasing it.** In my design only VLAN 99 was blocked, and 99 is the native parking VLAN carrying no user traffic, so my connectivity was fine either way.
+
+Knowing which alarms to act on and which to note and walk past is most of what troubleshooting actually is.
 
 ### 🔍 Reading `show interfaces trunk` to find the unconfigured end
 
@@ -154,9 +168,9 @@ This lets you tell which end of a link is unconfigured **without logging into th
 
 ### 🪤 Your VLANs are not in the exported config
 
-An exported switch config contains `switchport access vlan 30` but never contains `vlan 30`.
+My exported switch configs contain `switchport access vlan 30` but never contain `vlan 30`. I thought my export had failed.
 
-Cisco stores the VLAN database in **`vlan.dat`**, a separate file from the running config. So `show running-config` shows ports *assigned* to a VLAN but never shows the VLAN being *created*.
+It had not. Cisco stores the VLAN database in **`vlan.dat`**, a separate file from the running config. So `show running-config` shows ports *assigned* to a VLAN but never shows the VLAN being *created*.
 
 Paste an exported config into a fresh switch without creating the VLANs first and **every port assignment fails silently**. Create them first:
 
@@ -177,17 +191,20 @@ Every config file in `network/configs/` carries this block in its header for tha
 
 ### 🖨️ DHCP handing out a static address
 
-The `CLIENTS` pool leases from all of `10.0.20.0/24` and originally excluded only `.1` to `.50`. The printer holds `10.0.20.80` statically, inside the lease range.
+My `CLIENTS` pool leases from all of `10.0.20.0/24` and originally excluded only `.1` to `.50`. My printer holds `10.0.20.80` statically, inside the lease range.
 
-Nothing broke on the day. It would have broken the first time a new device joined and got offered `.80`.
+Nothing broke on the day I built it. It would have broken the first time a new device joined and got offered `.80`.
 
 ```
 ip dhcp excluded-address 10.0.20.80
 ```
 
-**Anything statically assigned inside a DHCP range must be excluded from that range.** This one is worth internalising, because the symptom appears months after the mistake.
+**Anything statically assigned inside a DHCP range has to be excluded from that range.** I would internalise this one, because the symptom shows up months after the mistake.
 
-The exclusion range also decides the first offered address: excluding `.1` to `.50` is what makes the first laptop land on `.51`, matching `AST-1011` in the CMDB.
+Two things I took from it:
+
+- I only found this because I built the lab. The config read perfectly on paper
+- The exclusion range also decides the first offered address. Excluding `.1` to `.50` is what makes my first laptop land on `.51`, matching `AST-1011` in the CMDB
 
 ### 🧹 A stray `router rip`
 

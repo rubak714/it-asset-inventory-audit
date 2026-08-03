@@ -1,10 +1,10 @@
 # 🧪 Lab Build (Cisco Packet Tracer)
 
-This builds the network in `docs/network-topology.md` as a real, configurable lab. You write real IOS, verify it, and save the evidence. The CMDB in `data/hardware-inventory.csv` then describes the network you actually built.
+This is how I built the network in [`network-topology.md`](network-topology.md) as a real, configurable lab. You write real IOS, verify it, and save the evidence. My CMDB in [`../data/hardware-inventory.csv`](../data/hardware-inventory.csv) then describes a network that actually exists.
 
-No physical hardware needed. Packet Tracer is free through the Cisco Networking Academy. I built this on version 9.0.0.
+No physical hardware needed. Packet Tracer is free through the Cisco Networking Academy, and I built this on version 9.0.0.
 
-Everything below is what I did, including the parts that went wrong. The corrections are marked, because a guide that pretends the first attempt worked is not much use to the next person.
+Everything below is what I actually did, including the parts I got wrong. I marked the corrections rather than quietly folding them in, because a guide that pretends the first attempt worked is not much use to anyone.
 
 ## ⏱️ Honest time estimate
 
@@ -56,7 +56,9 @@ Switch-to-switch links need a **crossover** cable while router-to-switch and PC-
 | `sw-acc-02` | `Fa0/1` | `nb-1147` | `Fa0` | access VLAN 20 |
 | `sw-acc-02` | `Fa0/2` | `prn-2f-01` | `Fa0` | access VLAN 20 |
 
-> ⚠️ **Correction from the first attempt.** I originally cabled `prn-2f-01` to `sw-acc-01`. The CMDB puts it in `OG2-Flur`, second floor, so it belongs on `sw-acc-02`. The device name even says `2f`. Worth catching, because a wrong-floor cable makes the inventory wrong in a way no field-level audit can detect: which switch a device hangs off is not one of the checked fields.
+> ⚠️ **Correction from my first attempt.** I originally cabled `prn-2f-01` to `sw-acc-01`. My CMDB puts it in `OG2-Flur`, second floor, so it belongs on `sw-acc-02`. The device name even says `2f` and I still got it wrong.
+>
+> I am glad I caught it, because a wrong-floor cable makes my inventory wrong in a way no field-level audit can detect. Which switch a device hangs off is not one of the fields I check.
 
 ### Reading the link lights
 
@@ -131,9 +133,11 @@ end
 write memory
 ```
 
-> ⚠️ **Correction from the first attempt.** The third exclusion line was missing. `prn-2f-01` holds `10.0.20.80` statically, but the CLIENTS pool leases the whole of `10.0.20.0/24`, so DHCP could hand that address to a laptop. It would have worked fine until the day a new device joined, which is the kind of fault worth finding in a lab. The written config looked correct on paper and only building it exposed this.
+> ⚠️ **Correction from my first attempt.** I was missing the third exclusion line. `prn-2f-01` holds `10.0.20.80` statically, but my CLIENTS pool leases the whole of `10.0.20.0/24`, so DHCP could have handed that address to a laptop.
+>
+> It would have worked fine until the day a new device joined. My written config looked correct on paper and only building the lab exposed it, which is exactly the kind of fault I would rather find here than in an office.
 
-The exclusion range also decides the first offered address. Excluding `.1` to `.50` makes the first laptop land on `.51`, matching `AST-1011`.
+The exclusion range also decides the first offered address. I excluded `.1` to `.50` so my first laptop lands on `.51`, matching `AST-1011`.
 
 ### Check
 

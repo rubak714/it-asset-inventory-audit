@@ -1,12 +1,12 @@
 # 🌐 Network Topology
 
-Site DE-KOELN-HQ. A small segmented LAN with a perimeter firewall, an edge router doing inter-VLAN routing, one core switch, access switches per floor, and Wi-Fi through a WLAN controller and access points.
+Site DE-KOELN-HQ. My small segmented LAN: a perimeter firewall, an edge router doing inter-VLAN routing, one core switch, access switches per floor, and Wi-Fi through a WLAN controller and access points.
 
-Every device here maps to an AssetID in `data/hardware-inventory.csv`. That mapping is the point of the whole project: the inventory describes a network that exists, not a list of plausible hostnames.
+Every device here maps to an AssetID in [`../data/hardware-inventory.csv`](../data/hardware-inventory.csv). That mapping is the point of the whole project. I want my inventory to describe a network that exists, not a list of plausible hostnames.
 
-## 🏗️ What is built and what is designed
+## 🏗️ What I built and what I only designed
 
-I built the wired core in Packet Tracer and verified it end to end. The lab file is `network/koeln-hq-lan.pkt` and the verification captures are in `network/screenshots/`.
+I built the wired core in Packet Tracer and verified it end to end. My lab file is [`../network/koeln-hq-lan.pkt`](../network/koeln-hq-lan.pkt) and my captures are in [`../network/screenshots/`](../network/screenshots/).
 
 | Part | Status |
 |---|---|
@@ -18,7 +18,7 @@ I built the wired core in Packet Tracer and verified it end to end. The lab file
 | Wi-Fi: WLAN controller and access points | 📐 designed, not yet built |
 | Perimeter firewall | 📐 designed, not yet built |
 
-The unbuilt parts are in the CMDB and in the diagram because they are part of the design. They are marked here rather than quietly implied so nobody has to guess which is which.
+I keep the unbuilt parts in my CMDB and in the diagram because they belong to the design. I mark them here rather than quietly implying I built them, so nobody has to guess which is which.
 
 ## 📊 Diagram
 

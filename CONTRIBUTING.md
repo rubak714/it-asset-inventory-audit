@@ -1,12 +1,12 @@
 # 🤝 Contributing
 
-Thanks for looking. This is a portfolio project, but it is a working one, and issues or pull requests are welcome.
+Thanks for looking. This is a portfolio project, but it is a working one, and I welcome issues and pull requests.
 
-## 🚀 Running it locally
+## 🚀 Running it
 
-### 🌐 Hardware module, no account needed
+### 🌐 The hardware module, no account needed
 
-The fastest way to see the whole method working. No cloud login, no Az module, nothing to install.
+This is the fastest way to see my whole method working. No cloud login, no Az module, nothing to install.
 
 ```powershell
 git clone https://github.com/rubak714/it-asset-inventory-audit.git
@@ -19,11 +19,11 @@ cd it-asset-inventory-audit
 Get-Content reports\accuracy-log.csv
 ```
 
-You should see 9 of 15, then 15 of 15.
+You should get 9 of 15, then 15 of 15. If you get something else, that is worth an issue.
 
-### ☁️ Cloud module, needs an Azure subscription
+### ☁️ The cloud module, needs an Azure subscription
 
-Everything it creates (NSG, VNet, route table) is free, and [`04-teardown.ps1`](scripts/04-teardown.ps1) removes it all.
+Everything it creates (NSG, VNet, route table) is free, and [`04-teardown.ps1`](scripts/04-teardown.ps1) removes all of it.
 
 ```powershell
 Connect-AzAccount
@@ -37,29 +37,29 @@ Set-AzContext -Subscription "<your-subscription-id>"
 ```
 
 > [!WARNING]
-> In Azure Cloud Shell, pick **PowerShell** from the dropdown, not Bash, and use forward slashes: `./scripts/00-setup-demo-assets.ps1`. Bash cannot run `.ps1` files and fails without a useful message.
+> In Azure Cloud Shell, pick **PowerShell** from the dropdown, not Bash, and use forward slashes: `./scripts/00-setup-demo-assets.ps1`. I lost time to this myself. Bash cannot run `.ps1` files and fails without a useful message.
 
 ### 🔌 The network lab
 
-Open [`network/koeln-hq-lan.pkt`](network/koeln-hq-lan.pkt) in Cisco Packet Tracer 9.0.0 or later. Everything is configured, so you can run the verification commands straight away.
+Open [`network/koeln-hq-lan.pkt`](network/koeln-hq-lan.pkt) in Cisco Packet Tracer 9.0.0 or later. I left everything configured, so you can run the verification commands straight away.
 
-To build it yourself, [`docs/lab-build.md`](docs/lab-build.md) walks through it stage by stage with the real IOS.
+To build it yourself, [`docs/lab-build.md`](docs/lab-build.md) walks through it stage by stage with the real IOS, including the mistakes I made.
 
-## 💡 What would actually help
+## 💡 What would actually help me
 
-| Area | What |
+| Area | What I am after |
 |---|---|
-| 📶 Wi-Fi | Build the WLC and access points in the lab. The design is in [`docs/network-topology.md`](docs/network-topology.md), SSIDs `KOELN-CORP` and `KOELN-GUEST` on VLAN 40 |
-| 🔍 Audit checks | New checks are welcome, with a stated reason for each. A check nobody can act on is not worth the runtime |
-| 🌍 A second topology | Another site the CMDB could describe, so the audit runs against more than one network |
-| 🐛 Bugs | Especially cross-platform ones. The scripts run on Windows PowerShell 5.1, PowerShell 7, and Cloud Shell on Linux |
-| 📝 Documentation | If something in the build guide does not match what your Packet Tracer does, that is worth an issue |
+| 📶 Wi-Fi | Build the WLC and access points in the lab. I designed them in [`docs/network-topology.md`](docs/network-topology.md), SSIDs `KOELN-CORP` and `KOELN-GUEST` on VLAN 40 |
+| 🔍 Audit checks | New checks with a stated reason for each. A check nobody can act on is not worth the runtime |
+| 🌍 A second topology | Another site my CMDB could describe, so the audit runs against more than one network |
+| 🐛 Bugs | Cross-platform ones especially. These run on Windows PowerShell 5.1, PowerShell 7, and Cloud Shell on Linux |
+| 📝 Docs | If something in my build guide does not match what your Packet Tracer does, tell me |
 
-## 📐 Conventions
+## 📐 Conventions I follow
 
 ### Commits
 
-[Conventional Commits](https://www.conventionalcommits.org/):
+I use [Conventional Commits](https://www.conventionalcommits.org/):
 
 | Prefix | For |
 |---|---|
@@ -68,63 +68,70 @@ To build it yourself, [`docs/lab-build.md`](docs/lab-build.md) walks through it 
 | `docs:` | documentation only |
 | `chore:` | housekeeping, config, tooling |
 
-Write the body as full-width paragraphs, not hard-wrapped at 72 characters. Explain **why**, not what. The diff already shows what.
+Two things I care about in a commit body:
+
+- Write full-width paragraphs, not hard-wrapped at 72 characters
+- Explain **why**, not what. The diff already shows what
 
 ### Pull requests
 
-Say what you changed and what you decided against. A PR that records a decision which could reasonably have gone the other way is worth more than one that only lists files.
+Say what you changed and what you decided against. A PR that records a decision which could reasonably have gone the other way is worth more to me than one listing files.
 
-Reference the issue with `Closes #N` so it closes on merge.
+Use `Closes #N` so the issue closes on merge.
 
 ### PowerShell
 
 **Build paths portably.** Never embed a separator:
 
 ```powershell
-# no, breaks on Linux where \ is a legal filename character
+# no. Breaks on Linux, where \ is a legal filename character
 Join-Path $PSScriptRoot '..\reports'
 
 # yes
 Join-Path (Split-Path $PSScriptRoot -Parent) 'reports'
 ```
 
-Avoid the multi-argument `Join-Path`. It reads better but needs PowerShell 6+, and these scripts should keep running in Windows PowerShell 5.1.
+That exact bug was in this repo. It created a directory literally named `..\reports` in Cloud Shell and printed a success message the whole time.
 
-**Findings must be actionable.** Report `missing:Owner` or `invalid:VLAN=25`, never a bare `False`. Whoever reads the output has to know what to fix.
+Avoid the multi-argument `Join-Path` too. It reads better but needs PowerShell 6+, and I want these running on a plain 5.1 desktop.
 
-**Never rewrite source data in place.** Remediation writes a clean copy. The before state has to stay reproducible or the measurement cannot be checked.
+**Make findings actionable.** Report `missing:Owner` or `invalid:VLAN=25`, never a bare `False`. Whoever reads the output has to know what to fix.
+
+**Never rewrite source data in place.** Remediation writes a clean copy. I need the before state reproducible, or nobody can check my measurement.
 
 ### New audit checks
 
-A check needs three things:
+A check needs three things from me before I merge it:
 
-1. A rule written down in the relevant file under [`config/`](config/) first
+1. A rule written down in the relevant file under [`config/`](config/) **first**
 2. A typed failure reason, so the report says what broke
 3. A sentence on why it exists, in the standard
 
-The third one matters most. Every check in [`config/hardware-inventory-standard.md`](config/hardware-inventory-standard.md) says what failure it catches. A rule nobody can justify gets ignored, then removed.
+The third matters most. Every check in [`config/hardware-inventory-standard.md`](config/hardware-inventory-standard.md) says which failure it catches. A rule nobody can justify gets ignored, then removed.
 
 ### Network configs
 
-Files in [`network/configs/`](network/configs/) are **exports from the working lab**, not drafts. If you change a device, rebuild the lab, verify it, and re-export with `show running-config`.
+The files in [`network/configs/`](network/configs/) are **exports from my working lab**, not drafts. If you change a device, rebuild the lab, verify it, then re-export with `show running-config`.
 
 > [!IMPORTANT]
-> Cisco keeps the VLAN database in `vlan.dat`, separate from the running config, so an exported config never contains its own `vlan` definitions. Paste one into a fresh switch without creating the VLANs first and every port assignment fails silently. Each config file carries the block to paste first in its header.
+> Cisco keeps the VLAN database in `vlan.dat`, separate from the running config, so an exported config never contains its own `vlan` definitions. Paste one into a fresh switch without creating the VLANs first and every port assignment fails silently. I put the block to paste first in each file's header.
 
-## 🧪 Before opening a PR
+## 🧪 Before you open a PR
 
-- [ ] Run the hardware module end to end and confirm 60% then 100%
-- [ ] If you touched a script, run it on Windows PowerShell and in Cloud Shell
+- [ ] Run the hardware module end to end, confirm 60% then 100%
+- [ ] If you touched a script, run it on Windows PowerShell **and** in Cloud Shell
 - [ ] If you touched the lab, re-export the configs and update the screenshots
 - [ ] If you added a check, document the rule and the reason in `config/`
 - [ ] No credentials, keys or subscription identifiers anywhere in the diff
 
 ## 🐞 Reporting a problem
 
-Useful issues include what you ran, what you expected, what happened, and where you ran it (Windows PowerShell 5.1, PowerShell 7, or Cloud Shell). The platform matters more than usual here, since one bug in this repo's history existed only on Linux.
+Tell me what you ran, what you expected, what happened, and **where** you ran it: Windows PowerShell 5.1, PowerShell 7, or Cloud Shell.
 
-[`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) covers the problems already hit. If yours is there but the fix did not work, say so, that is worth knowing.
+The platform matters more than usual here. One bug in this repo's history existed only on Linux and looked like success on Windows.
+
+I wrote up everything I hit in [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md). If your problem is there but my fix did not work for you, say so. That is worth knowing.
 
 ## 📄 License
 
-Contributions are accepted under the [MIT License](LICENSE).
+I accept contributions under the [MIT License](LICENSE).
