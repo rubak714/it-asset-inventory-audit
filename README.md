@@ -111,9 +111,59 @@ Tracking accuracy is the share of assets that fully comply with the policy: all 
 
 | Module | Assets | Before | After |
 |--------|--------|--------|-------|
+| ☁️ Cloud | 8 | 3/8 = **37.5%** | 8/8 = **100%** |
 | 🌐 Hardware | 15 | 9/15 = **60%** | 15/15 = **100%** |
 
-Both modules append to the same `reports/accuracy-log.csv`, with a timestamp, label, total, compliant count and percentage. That file is the evidence, not the README.
+Both numbers are measured, not projected. The cloud module was run in Azure Cloud Shell against a live subscription in Germany West Central. The hardware module was run locally. Both appended to the same log:
+
+```
+"Timestamp","Label","Total","Compliant","NonCompliant","AccuracyPct"
+"2026-08-03T20:23:39.5811949+00:00","before","8","3","5","37.5"
+"2026-08-03T20:24:57.5388757+00:00","after","8","8","0","100"
+"2026-08-04T02:35:18.1292292+06:00","hardware-before","15","9","6","60"
+"2026-08-04T02:35:18.1965662+06:00","hardware-after","15","15","0","100"
+```
+
+The offsets differ, `+00:00` on the cloud rows and `+06:00` on the hardware rows, because those runs happened on two different machines. The log is append-only, so runs accumulate into one record instead of overwriting each other.
+
+## 🧾 Evidence
+
+Everything above is backed by a generated file in `reports/`.
+
+| File | What it holds |
+|---|---|
+| `reports/accuracy-log.csv` | Every audit run, both modules, timestamped |
+| `reports/audit-before.csv` | Cloud, per-resource findings before remediation |
+| `reports/audit-after.csv` | Cloud, same eight resources after |
+| `reports/audit-hardware-before.csv` | Hardware, per-device findings before reconciliation |
+| `reports/audit-hardware-after.csv` | Hardware, same fifteen devices after |
+
+The detail reports are the more useful artifact. They do not just say five resources failed, they say which check each one failed and why:
+
+```
+"vnet-dmz-test","Microsoft.Network/virtualNetworks","False","invalid:Environment=Production"
+"rt-internal","Microsoft.Network/routeTables","False","missing:Owner; missing:CostCenter; missing:Environment; missing:DataClassification; missing:AssetID; missing:Lifecycle"
+```
+
+### 🖥️ The cloud run
+
+Building the deliberately messy estate:
+
+![Creating the demo estate](images/setup-demo-assets.png)
+
+The audit finding all five seeded faults, and scoring 37.5%:
+
+![Audit before remediation](images/audit-before.png)
+
+`vnet-dmz-test` is the line worth reading twice. `Environment=Production` is present, so a check that only asked "is this field filled in" would pass it. It fails here because the standard allows `Prod`, `Test`, `Dev` and nothing else. That is the difference between a completeness check and a compliance audit.
+
+The log after both runs:
+
+![Accuracy log](images/accuracy-log.png)
+
+The inventory pull, showing all eight resources fully tagged after remediation:
+
+![Inventory](images/collect-inventory.png)
 
 ## 📄 License
 
