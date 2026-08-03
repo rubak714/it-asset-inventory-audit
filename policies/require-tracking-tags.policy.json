@@ -1,0 +1,28 @@
+{
+  "properties": {
+    "displayName": "IT asset tracking tags required",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "description": "Flags resources that are missing any of the required asset tracking tags.",
+    "metadata": {
+      "category": "Tags",
+      "version": "1.0.0"
+    },
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "anyOf": [
+          { "field": "tags['Owner']", "exists": "false" },
+          { "field": "tags['CostCenter']", "exists": "false" },
+          { "field": "tags['Environment']", "exists": "false" },
+          { "field": "tags['DataClassification']", "exists": "false" },
+          { "field": "tags['AssetID']", "exists": "false" },
+          { "field": "tags['Lifecycle']", "exists": "false" }
+        ]
+      },
+      "then": {
+        "effect": "audit"
+      }
+    }
+  }
+}
