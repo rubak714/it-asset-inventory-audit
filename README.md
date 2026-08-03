@@ -14,7 +14,7 @@ Region for the cloud module: Germany West Central (DSGVO data residency). The Az
 Work in progress. Building it up module by module.
 
 - [x] ☁️ Module 1: Azure resource governance
-- [ ] 🌐 Module 2: Hardware and network CMDB
+- [x] 🌐 Module 2: Hardware and network CMDB
 - [ ] 📡 Network documentation and lab build
 
 ## ☁️ Module 1: Azure resource governance
@@ -62,6 +62,58 @@ The resource types used are NSG, VNet and route table. Those are free, so the la
 `policies/require-tracking-tags.policy.json` expresses the same standard as an Azure Policy definition. The audit script is a point-in-time check I have to remember to run; the policy hands the rules to the platform so violations get flagged continuously, including on resources created after the audit.
 
 The effect is `audit`, not `deny`. Deny would block deployments, which is the right end state but the wrong place to start.
+
+## 🌐 Module 2: Hardware and network inventory
+
+No cloud login needed and no Az module. This module works on a CSV CMDB of physical devices, because most asset management work is physical. The rules are in `config/hardware-inventory-standard.md`.
+
+```powershell
+# 1. audit the CMDB BEFORE the fix  ->  note the accuracy
+.\scripts\10-audit-hardware.ps1 -CsvPath data\hardware-inventory.csv -Label "hardware-before"
+
+# 2. reconcile the broken records (writes a clean copy)
+.\scripts\11-remediate-hardware.ps1
+
+# 3. audit AFTER the fix  ->  note the accuracy
+.\scripts\10-audit-hardware.ps1 -CsvPath data\hardware-inventory-clean.csv -Label "hardware-after"
+```
+
+The seed CMDB holds 15 devices: a core switch, two access switches, an edge router, a perimeter firewall, a WLAN controller, three access points, a file server, two laptops and a printer. Every row maps to a device in the topology, so the inventory describes a network that exists rather than a list of plausible hostnames.
+
+Six records are broken on purpose, and each fault is one I would expect to actually find:
+
+| Asset | Fault |
+|---|---|
+| `AST-1010` | access point in reception with no owner |
+| `AST-1011` | laptop with no warranty end date |
+| `AST-1012` | access switch recorded as `10.0.10.300`, not a valid address |
+| `AST-1013` | laptop on VLAN 25, which is not in the plan |
+| `AST-1014` | printer with no cost center |
+| `AST-1015` | access point with no VLAN at all |
+
+### 🔍 The network checks
+
+Beyond the required fields, the audit does three things a generic spreadsheet validator would miss.
+
+IPv4 is parsed octet by octet rather than pattern matched, so `10.0.10.300` is caught as out of range instead of slipping past a loose regex. VLAN is checked against the actual plan, so a device on VLAN 25 is a finding even though 25 is a perfectly legal VLAN number in general. MAC is optional, but a malformed one still fails, because a half-typed MAC is worse than an empty field.
+
+Those three are what turn this from a spreadsheet linter into something that catches documentation drifting away from the real network.
+
+### 🔁 Why reconciliation writes a new file
+
+`11-remediate-hardware.ps1` keys its corrections by AssetID and writes a clean copy rather than editing the seed in place.
+
+The before state has to stay reproducible, otherwise the 60% cannot be re-measured by anyone checking my work. And a script that rewrites the source inventory on every run is how one bad assumption becomes a permanently corrupted CMDB.
+
+## 📊 The metric (tracking accuracy)
+
+Tracking accuracy is the share of assets that fully comply with the policy: all required fields present, and the constrained values valid.
+
+| Module | Assets | Before | After |
+|--------|--------|--------|-------|
+| 🌐 Hardware | 15 | 9/15 = **60%** | 15/15 = **100%** |
+
+Both modules append to the same `reports/accuracy-log.csv`, with a timestamp, label, total, compliant count and percentage. That file is the evidence, not the README.
 
 ## 📄 License
 
