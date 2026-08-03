@@ -14,7 +14,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$policyFile = Join-Path $PSScriptRoot '..\policies\require-tracking-tags.policy.json'
+$policyDir  = Join-Path (Split-Path $PSScriptRoot -Parent) 'policies'
+$policyFile = Join-Path $policyDir 'require-tracking-tags.policy.json'
 $json = Get-Content $policyFile -Raw | ConvertFrom-Json
 $rule = $json.properties.policyRule | ConvertTo-Json -Depth 20
 

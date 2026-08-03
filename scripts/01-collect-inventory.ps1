@@ -8,7 +8,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$reportDir = Join-Path $PSScriptRoot '..\reports'
+$reportDir = Join-Path (Split-Path $PSScriptRoot -Parent) 'reports'
 New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
 
 $fields = 'Owner','CostCenter','Environment','DataClassification','AssetID','Lifecycle'
