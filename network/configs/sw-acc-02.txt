@@ -1,0 +1,130 @@
+! sw-acc-02  (Cisco 2960-24TT)  -  AST-1003
+! Role: access switch, second floor. Client ports in VLAN 20, trunk up to the core
+! Site: DE-KOELN-HQ, OG2-IDF      Management IP: 10.0.10.12 (VLAN 10)
+! Connected: nb-1147 (AST-1013) on Fa0/1, prn-2f-01 (AST-1014) on Fa0/2
+!
+! Exported from the working lab in network/koeln-hq-lan.pkt. Not hand written.
+!
+! BEFORE PASTING THIS FILE: create the VLANs first. Cisco keeps the VLAN
+! database in vlan.dat, which is separate from the running config, so the
+! vlan definitions do not appear below even though they exist on the device.
+! Paste this block first or every port assignment here fails silently:
+!
+!   vlan 10
+!    name MGMT
+!   vlan 20
+!    name CLIENTS
+!   vlan 30
+!    name SERVERS
+!   vlan 40
+!    name WIFI
+!   vlan 99
+!    name NATIVE
+!
+! Identical to sw-acc-01 apart from the hostname and the management IP.
+! The printer on Fa0/2 holds a static 10.0.20.80, which is why the router
+! excludes that address from the CLIENTS DHCP pool.
+!
+version 15.0
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname sw-acc-02
+!
+spanning-tree mode pvst
+spanning-tree extend system-id
+!
+interface FastEthernet0/1
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/2
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/3
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/4
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/5
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/6
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/7
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/8
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/9
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/10
+ switchport access vlan 20
+ switchport mode access
+!
+interface FastEthernet0/11
+!
+interface FastEthernet0/12
+!
+interface FastEthernet0/13
+!
+interface FastEthernet0/14
+!
+interface FastEthernet0/15
+!
+interface FastEthernet0/16
+!
+interface FastEthernet0/17
+!
+interface FastEthernet0/18
+!
+interface FastEthernet0/19
+!
+interface FastEthernet0/20
+!
+interface FastEthernet0/21
+!
+interface FastEthernet0/22
+!
+interface FastEthernet0/23
+!
+interface FastEthernet0/24
+!
+interface GigabitEthernet0/1
+ description uplink to sw-core-01
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 10,20,30,40,99
+ switchport mode trunk
+!
+interface GigabitEthernet0/2
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan10
+ ip address 10.0.10.12 255.255.255.0
+!
+ip default-gateway 10.0.10.1
+!
+line con 0
+!
+line vty 0 4
+ login
+line vty 5 15
+ login
+!
+end
