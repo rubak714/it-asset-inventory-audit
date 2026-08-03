@@ -11,11 +11,10 @@ Region for the cloud module: Germany West Central (DSGVO data residency). The Az
 
 ## 🚧 Status
 
-Work in progress. Building it up module by module.
-
 - [x] ☁️ Module 1: Azure resource governance
 - [x] 🌐 Module 2: Hardware and network CMDB
-- [ ] 📡 Network documentation and lab build
+- [x] 📡 Network documentation and lab build
+- [ ] 📶 Wi-Fi: WLAN controller and access points in the lab
 
 ## ☁️ Module 1: Azure resource governance
 
@@ -104,6 +103,49 @@ Those three are what turn this from a spreadsheet linter into something that cat
 `11-remediate-hardware.ps1` keys its corrections by AssetID and writes a clean copy rather than editing the seed in place.
 
 The before state has to stay reproducible, otherwise the 60% cannot be re-measured by anyone checking my work. And a script that rewrites the source inventory on every run is how one bad assumption becomes a permanently corrupted CMDB.
+
+## 📡 The network behind the CMDB
+
+The hardware module would be a spreadsheet exercise if the devices in it were invented. They are not. I built the LAN in Packet Tracer, verified it, and the lab file is in the repo at `network/koeln-hq-lan.pkt`.
+
+Eight devices, seven links, five VLANs. A 2911 router doing inter-VLAN routing and DHCP, a core switch, two access switches per floor, a file server, two laptops and a printer. Every one maps to an AssetID in the CMDB.
+
+| VLAN | Name | Use | Subnet | Gateway |
+|------|------|-----|--------|---------|
+| 10 | MGMT | switches, router, APs, controller | 10.0.10.0/24 | 10.0.10.1 |
+| 20 | CLIENTS | laptops, printers | 10.0.20.0/24 | 10.0.20.1 |
+| 30 | SERVERS | file and app servers | 10.0.30.0/24 | 10.0.30.1 |
+| 40 | WIFI | wireless clients | 10.0.40.0/24 | 10.0.40.1 |
+| 99 | NATIVE | trunk native and parking | not routed | none |
+
+Switch-to-switch and switch-to-router links are 802.1Q trunks with an explicit allowed VLAN list and 99 as native. Client ports are untagged access ports in VLAN 20. The router serves DHCP for clients and Wi-Fi, with static addresses excluded from the pools.
+
+Full design in `docs/network-topology.md`, build steps in `docs/lab-build.md`, exported device configs in `network/configs/`.
+
+### 🎯 How I know it actually routes
+
+The strongest evidence in the lab is one digit.
+
+| Ping from `nb-1123` | TTL | Meaning |
+|---|---|---|
+| `10.0.20.1` gateway | 255 | the router answered directly |
+| `10.0.20.52` other laptop | 128 | same VLAN, never routed |
+| `10.0.20.80` printer | 128 | same VLAN |
+| `10.0.30.10` file server | **127** | **routed exactly once** |
+
+Replies start at TTL 128 and every router that forwards one subtracts 1. A reply coming back at 127 is the packet itself reporting that exactly one router handled it. That proves inter-VLAN routing without anyone having to trust my config or my diagram.
+
+Captures are in `network/screenshots/`, numbered in run order.
+
+### 🔍 What building it changed
+
+The lab was not a formality. It found faults in configs that looked correct written down.
+
+The printer was cabled to the first-floor switch when the CMDB puts it on the second. That is the kind of error no field-level audit can catch, because which switch a device hangs off is not a checked field.
+
+The DHCP pool could hand out the printer's static `10.0.20.80`, since the pool covered the whole subnet and only excluded `.1` to `.50`. It would have worked perfectly until the day a new device joined.
+
+Both corrections are in the exported configs, and both are written up in `docs/lab-build.md` as corrections rather than quietly fixed.
 
 ## 📊 The metric (tracking accuracy)
 

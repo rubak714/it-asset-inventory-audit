@@ -1,6 +1,9 @@
 # generated during remediation, rebuilt from the seed on every run
 data/hardware-inventory-clean.csv
 
+# personal work notes, stays on my machine
+WORKLOG.md
+
 # editor and OS junk
 .vscode/
 .idea/
