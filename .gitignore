@@ -1,0 +1,14 @@
+# generated during remediation, rebuilt from the seed on every run
+data/hardware-inventory-clean.csv
+
+# editor and OS junk
+.vscode/
+.idea/
+*.swp
+*.tmp
+.DS_Store
+Thumbs.db
+
+# note: reports/ is tracked on purpose.
+# accuracy-log.csv and the audit reports are the evidence artifacts.
+# data/hardware-inventory.csv (the seed) is tracked on purpose too.
